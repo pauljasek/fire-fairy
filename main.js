@@ -89,8 +89,8 @@ function setup(loader, resources) {
     } else {
         diffuse = new PIXI.extras.TilingSprite(
             resources.pebbles.texture,
-            screen.width,
-            screen.height,
+            screen.width * ratio,
+            screen.height * ratio,
         );
     }
     diffuse.parentGroup = diffuseGroup;
@@ -105,8 +105,8 @@ function setup(loader, resources) {
     } else {
         normals = new PIXI.extras.TilingSprite(
             resources.pebbles_n.texture,
-            screen.width,
-            screen.height,
+            screen.width * ratio,
+            screen.height * ratio,
         );
     }
     normals.parentGroup = normalGroup;
