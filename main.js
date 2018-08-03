@@ -14,6 +14,7 @@ const {diffuseGroup, normalGroup, lightGroup} = PIXI.lights;
 const {Layer, Stage} = PIXI.display;
 
 let ratio = window.devicePixelRatio;
+alert(ratio);
 
 //Create a Pixi Application
 let app = new Application({
@@ -37,10 +38,11 @@ document.body.appendChild(app.view);
 
 let stage = app.stage = new PIXI.display.Stage();
 
+document.onclick = requestFullScreen;
 document.onpointerdown = requestFullScreen;
 
 function requestFullScreen(event) {
-    event.preventDefault();
+    //event.preventDefault();
 
     let docelem = document.documentElement;
 
