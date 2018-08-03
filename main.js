@@ -13,11 +13,13 @@ let Application = PIXI.Application;
 const {diffuseGroup, normalGroup, lightGroup} = PIXI.lights;
 const {Layer, Stage} = PIXI.display;
 
+let ratio = window.devicePixelRatio;
+
 //Create a Pixi Application
 let app = new Application({
     antialias: true,    // default: false
     transparent: false, // default: false
-    resolution: 1       // default: 1
+    resolution: ratio,       // default: 1
 });
 
 app.renderer.view.style.position = "absolute";
