@@ -15,12 +15,14 @@ const {Layer, Stage} = PIXI.display;
 
 let ratio = window.devicePixelRatio;
 alert(ratio);
+alert(window.innerWidth);
+alert(window.innerHeight);
 
 //Create a Pixi Application
 let app = new Application({
     antialias: true,    // default: false
     transparent: false, // default: false
-    resolution: ratio,       // default: 1
+    resolution: 1,       // default: 1
 });
 
 app.renderer.view.style.position = "absolute";
