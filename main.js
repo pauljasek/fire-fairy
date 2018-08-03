@@ -14,9 +14,6 @@ const {diffuseGroup, normalGroup, lightGroup} = PIXI.lights;
 const {Layer, Stage} = PIXI.display;
 
 let ratio = window.devicePixelRatio;
-alert(ratio);
-alert(window.innerWidth);
-alert(window.innerHeight);
 
 //Create a Pixi Application
 let app = new Application({
