@@ -37,8 +37,10 @@ document.body.appendChild(app.view);
 
 let stage = app.stage = new PIXI.display.Stage();
 
+app.renderer.plugins.interaction.autoPreventDefault = false;
 document.onclick = requestFullScreen;
-document.onpointerdown = requestFullScreen;
+document.onmousedown = requestFullScreen;
+
 
 function requestFullScreen(event) {
     //event.preventDefault();
@@ -128,10 +130,10 @@ function setup(loader, resources) {
     );
 
     fire_sound = resources.fire.sound;
-    fire_sound.volume = 0.1;
+    fire_sound.volume = 0.5;
 
     flame_sound = resources.flame.sound;
-    flame_sound.volume = 2;
+    flame_sound.volume = 3;
 
     points = {};
     last_points = {};
@@ -197,7 +199,7 @@ function play(delta) {
             let speed = Math.sqrt(vx*vx + vy*vy);
 
             if (sounds.hasOwnProperty(id)) {
-                sounds[id].volume = 0.8 * sounds[id].volume + 0.2 * Math.min(1, speed/100);
+                sounds[id].volume = 0.6 * sounds[id].volume + 0.4 * Math.min(1, speed/100);
             }
         }
 
@@ -210,14 +212,15 @@ function play(delta) {
 
             let angle = Math.random() * 2 * Math.PI;
 
-            light.vx = Math.cos(angle) * 5;
-            light.vy = Math.sin(angle) * 5;
+            light.vx = Math.cos(angle) * 2;
+            light.vy = Math.sin(angle) * 2;
 
             light.duration = Math.random() * max_duration;
 
             const start_time = Math.random() * (fire_sound.duration - light.duration/60);
             const end_time = start_time + light.duration/60;
-            fire_sound.play({start: start_time, end: end_time});
+
+            light.sound = fire_sound.play({start: start_time, end: end_time});
 
             //let r = 1;
             //light.falloff = [1, 2/r, 1/r/r];
@@ -227,6 +230,7 @@ function play(delta) {
         last_points[id] = point;
     }
 
+    removes = [];
     sparkles.children.forEach(e => {
         e.x += e.vx * delta;
         e.y += e.vy * delta;
@@ -237,10 +241,15 @@ function play(delta) {
 
         e.lightHeight = max_height * e.duration/max_duration;
         e.brightness = max_brightness * e.duration/max_duration;
+        //e.sound.volume = e.duration/max_duration;
 
         e.duration -= delta;
         if (e.duration < 0) {
-            sparkles.removeChild(e);
+            removes.push(e);
         }
+    });
+
+    removes.forEach(e => {
+        sparkles.removeChild(e);
     });
 }
