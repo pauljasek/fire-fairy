@@ -228,7 +228,8 @@ function play(delta) {
         e.x += e.vx * delta;
         e.y += e.vy * delta;
 
-        e.vx *= Math.pow(1.01, delta);
+        //e.vx *= Math.pow(1.01, delta);
+        e.vy -= 0.5;
         e.vy *= Math.pow(1.01, delta);
 
         e.lightHeight = max_height * e.duration/max_duration;
