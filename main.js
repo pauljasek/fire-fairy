@@ -13,6 +13,7 @@ let Application = PIXI.Application;
 const {diffuseGroup, normalGroup, lightGroup} = PIXI.lights;
 const {Layer, Stage} = PIXI.display;
 
+let SIZE = 1920;
 let ratio = window.devicePixelRatio;
 
 //Create a Pixi Application
@@ -26,46 +27,70 @@ app.renderer.view.style.position = "absolute";
 app.renderer.view.style.display = "block";
 app.renderer.autoResize = true;
 
-resize();
-window.onresize = resize;
-function resize() {
-    app.renderer.resize(window.innerWidth, window.innerHeight);
-}
-
 //Add the canvas that Pixi automatically created for you to the HTML document
 document.body.appendChild(app.view);
 
 let stage = app.stage = new PIXI.display.Stage();
 
-app.renderer.plugins.interaction.autoPreventDefault = false;
-document.onclick = requestFullScreen;
-document.onmousedown = requestFullScreen;
+resize();
 
+window.onresize = resize;
+function resize() {
+    app.renderer.resize(window.innerWidth, window.innerHeight);
+    let maxDimension = Math.max(window.innerWidth, window.innerHeight);
+    let scale = maxDimension/SIZE;
+    app.stage.scale.x = scale;
+    app.stage.scale.y = scale;
+
+    app.stage.x = (window.innerWidth - maxDimension)/2;
+    app.stage.y = (window.innerHeight - maxDimension)/2;
+}
 
 function requestFullScreen(event) {
-    //event.preventDefault();
-
-    let docelem = document.documentElement;
-
-    if (docelem.requestFullscreen) {
-        docelem.requestFullscreen();
-    }
-    else if (docelem.mozRequestFullScreen) {
-        docelem.mozRequestFullScreen();
-    }
-    else if (docelem.webkitRequestFullScreen) {
-        docelem.webkitRequestFullScreen();
-    }
-    else if (docelem.msRequestFullscreen) {
-        docelem.msRequestFullscreen();
+    if (screenfull.enabled) {
+        screenfull.request(app.view);
     }
 }
+
+let centerCircleRadius = 128;
+let centerCircleGraphic = new Graphics();
+centerCircleGraphic.beginFill(0x000000);
+centerCircleGraphic.drawCircle(0, 0, centerCircleRadius);
+centerCircleGraphic.endFill();
+
+let centerCircle = new Sprite(app.renderer.generateTexture(centerCircleGraphic));
+centerCircle.x = SIZE/2;
+centerCircle.y = SIZE/2;
+app.stage.addChild(centerCircle);
+
+centerCircle.anchor.set(0.5, 0.5);
+let loadingProgress = new Graphics();
+centerCircle.addChild(loadingProgress);
+
+centerCircle.textStyle = new PIXI.TextStyle({
+    align: 'center',
+    fill: '#ffffff',
+    fontSize: 36,
+});
+centerCircle.text = new PIXI.Text('loading', centerCircle.textStyle);
+centerCircle.text.anchor.x = 0.5;
+centerCircle.text.anchor.y = 0.5;
+centerCircle.addChild(centerCircle.text);
 
 loader.add('pebbles', 'images/pebbles.png')
     .add('pebbles_n', 'images/pebbles_n.png')
     .add('fire', 'sounds/fire.mp3')
     .add('flame', 'sounds/flame.mp3')
+    .on('progress', loadProgressHandler)
     .load(setup);
+
+function loadProgressHandler(loader, resource) {
+    let angle = loader.progress/100 * 2 * Math.PI - Math.PI/2;
+    loadingProgress.clear();
+    loadingProgress.lineStyle(10, 0xffffff);
+    loadingProgress.arc(0, 0, centerCircleRadius - 5, -Math.PI/2, angle);
+    loadingProgress.endFill();
+}
 
 let state;
     max_duration = 50;
@@ -76,44 +101,29 @@ let points, last_points, downs, sounds;
 let flame_sound, fire_sound;
 let sparkles;
 
+let background;
+
 function setup(loader, resources) {
     // Add the background diffuse color
-    let diffuse;
-    if (false) {
-        diffuse = new Sprite(PIXI.Texture.WHITE);
-        //diffuse.tint = 0xddffdd;
-        diffuse.tint = 0x333333;
-        diffuse.width = app.renderer.width;
-        diffuse.height = app.renderer.height;
-    } else {
-        diffuse = new PIXI.extras.TilingSprite(
-            resources.pebbles.texture,
-            screen.width * ratio,
-            screen.height * ratio,
-        );
-    }
+    let diffuse = new PIXI.extras.TilingSprite(
+        resources.pebbles.texture,
+        SIZE,
+        SIZE,
+    );
     diffuse.parentGroup = diffuseGroup;
 
-// Add the background normal map
-    let normals;
-    if (false) {
-        normals = new Sprite(PIXI.Texture.WHITE);
-        normals.tint = 0x8080ff;
-        normals.width = app.screen.width;
-        normals.height = app.screen.height;
-    } else {
-        normals = new PIXI.extras.TilingSprite(
-            resources.pebbles_n.texture,
-            screen.width * ratio,
-            screen.height * ratio,
-        );
-    }
+    // Add the background normal map
+    let normals = new PIXI.extras.TilingSprite(
+        resources.pebbles_n.texture,
+        SIZE,
+        SIZE,
+    );
     normals.parentGroup = normalGroup;
 
     sparkles = new Container(); //ParticleContainer();
 
-// Create a background container
-    const background = new Container();
+    // Create a background container
+    background = new Container();
     background.addChild(
         normals,
         diffuse,
@@ -133,7 +143,7 @@ function setup(loader, resources) {
     fire_sound.volume = 0.5;
 
     flame_sound = resources.flame.sound;
-    flame_sound.volume = 3;
+    flame_sound.volume = 5;
 
     points = {};
     last_points = {};
@@ -142,13 +152,13 @@ function setup(loader, resources) {
 
     app.renderer.plugins.interaction.on('pointermove', event => {
         let point = event.data.global;
-        point = new PIXI.Point(point.x, point.y);
+        point = new PIXI.Point((point.x - app.stage.x)/app.stage.scale.x, (point.y - app.stage.y)/app.stage.scale.y);
         points[event.data.pointerId] = point;
     });
 
     app.renderer.plugins.interaction.on('pointerdown', event => {
         let point = event.data.global;
-        point = new PIXI.Point(point.x, point.y);
+        point = new PIXI.Point((point.x - app.stage.x)/app.stage.scale.x, (point.y - app.stage.y)/app.stage.scale.y);
         points[event.data.pointerId] = point;
         downs[event.data.pointerId] = true;
         sounds[event.data.pointerId] = flame_sound.play({loop: true, start: Math.random() * flame_sound.duration});
@@ -169,9 +179,37 @@ function setup(loader, resources) {
             sounds[event.data.pointerId].stop();
         }
     });
+    app.renderer.plugins.interaction.on('pointercancel', event => {
+        //points[event.data.pointerId] = event.data.global;
+        downs[event.data.pointerId] = false;
+        if (sounds.hasOwnProperty(event.data.pointerId)) {
+            sounds[event.data.pointerId].stop();
+        }
+    });
 
     state = play;
-    app.ticker.add(delta => loop(delta));
+    app.ticker.add(loop);
+
+    if (screenfull.enabled) {
+        screenfull.on('change', leaveFullscreen);
+    }
+
+    centerCircle.text.text = 'begin';
+    centerCircle.interactive = true;
+    centerCircle.buttonMode = true;
+    centerCircle.pointertap = (e) => {
+        requestFullScreen();
+        centerCircle.visible = false;
+    };
+
+}
+
+function leaveFullscreen(event) {
+    if (!screenfull.isFullscreen) {
+        //background.visible = false;
+        //app.ticker.remove(loop);
+        centerCircle.visible = true;
+    }
 }
 
 function loop(delta){
@@ -241,7 +279,9 @@ function play(delta) {
 
         e.lightHeight = max_height * e.duration/max_duration;
         e.brightness = max_brightness * e.duration/max_duration;
-        //e.sound.volume = e.duration/max_duration;
+        if (e.sound.progress < 1) {
+            e.sound.volume = e.duration/max_duration;
+        }
 
         e.duration -= delta;
         if (e.duration < 0) {
