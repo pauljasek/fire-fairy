@@ -32,6 +32,9 @@ document.body.appendChild(app.view);
 
 let stage = app.stage = new PIXI.display.Stage();
 
+document.documentElement.style.overflow = 'hidden';  // firefox, chrome
+document.body.scroll = 'no'; // ie only
+
 resize();
 
 window.onresize = resize;
@@ -235,11 +238,11 @@ function loop(delta){
 }
 function loading(delta) {
     if (centerCircle.over) {
-        centerCircle.scale.x = Math.min(1.2, centerCircle.scale.x * 1.05);
-        centerCircle.scale.y = Math.min(1.2, centerCircle.scale.y * 1.05);
+        centerCircle.scale.x = Math.min(1.4, centerCircle.scale.x * 1.05);
+        centerCircle.scale.y = Math.min(1.4, centerCircle.scale.y * 1.05);
     } else {
-        centerCircle.scale.x = Math.max(1, centerCircle.scale.x * 0.95);
-        centerCircle.scale.y = Math.max(1, centerCircle.scale.y * 0.95);
+        centerCircle.scale.x = Math.max(1, centerCircle.scale.x * 0.92);
+        centerCircle.scale.y = Math.max(1, centerCircle.scale.y * 0.92);
     }
 }
 function play(delta) {
