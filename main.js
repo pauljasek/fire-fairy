@@ -82,12 +82,26 @@ centerCircle.text.anchor.y = 0.5;
 centerCircle.addChild(centerCircle.text);
 
 centerCircle.over = false;
+centerCircle.pointerdown = (e) => {
+    centerCircle.down = true;
+};
+centerCircle.pointercancel = (e) => {
+    centerCircle.down = false;
+};
+centerCircle.pointerup = (e) => {
+    centerCircle.down = false;
+};
+centerCircle.pointerupoutside = (e) => {
+    centerCircle.down = false;
+};
+
 centerCircle.pointerover = (e) => {
     centerCircle.over = true;
 };
 centerCircle.pointerout = (e) => {
     centerCircle.over = false;
 };
+
 
 loader.add('pebbles', 'images/pebbles.png')
     .add('pebbles_n', 'images/pebbles_n.png')
@@ -164,45 +178,52 @@ function setup(loader, resources) {
     sounds = {};
 
     app.renderer.plugins.interaction.on('pointermove', event => {
-        let point = event.data.global;
-        point = new PIXI.Point((point.x - app.stage.x) / app.stage.scale.x, (point.y - app.stage.y) / app.stage.scale.y);
-        points[event.data.pointerId] = point;
         if (state === play) {
+            let point = event.data.global;
+            point = new PIXI.Point((point.x - app.stage.x) / app.stage.scale.x, (point.y - app.stage.y) / app.stage.scale.y);
+            points[event.data.pointerId] = point;
         }
     });
 
     app.renderer.plugins.interaction.on('pointerdown', event => {
-        let point = event.data.global;
-        point = new PIXI.Point((point.x - app.stage.x)/app.stage.scale.x, (point.y - app.stage.y)/app.stage.scale.y);
-        points[event.data.pointerId] = point;
-        downs[event.data.pointerId] = true;
-
         if (state === play) {
+            let point = event.data.global;
+            point = new PIXI.Point((point.x - app.stage.x)/app.stage.scale.x, (point.y - app.stage.y)/app.stage.scale.y);
+            points[event.data.pointerId] = point;
+            downs[event.data.pointerId] = true;
+
             sounds[event.data.pointerId] = flame_sound.play({loop: true, start: Math.random() * flame_sound.duration});
             sounds[event.data.pointerId].volume = 0;
         }
     });
 
     app.renderer.plugins.interaction.on('pointerup', event => {
-        downs[event.data.pointerId] = false;
         if (state === play) {
+            downs[event.data.pointerId] = false;
+            if (sounds.hasOwnProperty(event.data.pointerId)) {
+                sounds[event.data.pointerId].stop();
+            }
+        }
+    });
+    app.renderer.plugins.interaction.on('pointerupoutside', event => {
+        if (state === play) {
+            downs[event.data.pointerId] = false;
             if (sounds.hasOwnProperty(event.data.pointerId)) {
                 sounds[event.data.pointerId].stop();
             }
         }
     });
     app.renderer.plugins.interaction.on('pointerout', event => {
-        downs[event.data.pointerId] = false;
         if (state === play) {
+            downs[event.data.pointerId] = false;
             if (sounds.hasOwnProperty(event.data.pointerId)) {
                 sounds[event.data.pointerId].stop();
             }
         }
     });
     app.renderer.plugins.interaction.on('pointercancel', event => {
-        downs[event.data.pointerId] = false;
         if (state === play) {
-            event.preventDefault();
+            downs[event.data.pointerId] = false;
             if (sounds.hasOwnProperty(event.data.pointerId)) {
                 sounds[event.data.pointerId].stop();
             }
@@ -219,17 +240,29 @@ function setup(loader, resources) {
     centerCircle.text.text = 'begin';
     centerCircle.interactive = true;
     centerCircle.buttonMode = true;
-    centerCircle.pointertap = (e) => {
+    centerCircle.pointertap = centerCircle.click = (e) => {
         requestFullScreen();
+
+        points = {};
+        last_points = {};
+        downs = {};
+        sounds = {};
     };
 }
 
 function fullScreenChange(event) {
     if (!screenfull.isFullscreen) {
+        points = {};
+        last_points = {};
+        downs = {};
+        sounds = {};
+
+        app.renderer.plugins.interaction.autoPreventDefault = false;
         state = loading;
         background.visible = false;
         centerCircle.visible = true;
     } else {
+        app.renderer.plugins.interaction.autoPreventDefault = true;
         state = play;
         background.visible = true;
         centerCircle.visible = false;
@@ -242,7 +275,7 @@ function loop(delta){
     state(delta);
 }
 function loading(delta) {
-    if (centerCircle.over) {
+    if (centerCircle.over || centerCircle.down) {
         centerCircle.scale.x = Math.min(1.4, centerCircle.scale.x * 1.05);
         centerCircle.scale.y = Math.min(1.4, centerCircle.scale.y * 1.05);
     } else {
@@ -316,7 +349,6 @@ function play(delta) {
         try {
             e.sound.volume = e.duration/max_duration;
         } catch {
-            console.log('volume set failed');
         }
 
         e.duration -= delta;
