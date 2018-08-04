@@ -319,11 +319,11 @@ function loop(delta){
 }
 function loading(delta) {
     if (centerCircle.over || centerCircle.down) {
-        centerCircle.scale.x = Math.min(1.4, centerCircle.scale.x * 1.2);
+        centerCircle.scale.x = Math.min(1.4, centerCircle.scale.x * 1.1);
         centerCircle.scale.y = Math.min(1.4, centerCircle.scale.y * 1.05);
     } else {
-        centerCircle.scale.x = Math.max(0.8, centerCircle.scale.x * 0.99);
-        centerCircle.scale.y = Math.max(0.8, centerCircle.scale.y * 0.97);
+        centerCircle.scale.x = Math.max(0.8, centerCircle.scale.x * 0.9);
+        centerCircle.scale.y = Math.max(0.8, centerCircle.scale.y * 0.95);
     }
     for (let id in sounds) {
         if (sounds.hasOwnProperty(id)) {
