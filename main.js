@@ -68,6 +68,7 @@ let centerCircle = new Sprite(app.renderer.generateTexture(centerCircleGraphic))
 centerCircle.x = SIZE/2;
 centerCircle.y = SIZE/2;
 
+/*
 centerCircle.button =  document.createElement("input");
 centerCircle.button.type = "button";
 centerCircle.button.style.width = "13.33vmax";
@@ -86,7 +87,7 @@ centerCircle.button.style.borderWidth = "10px";
 centerCircle.button.style.borderColor = "#" + flameColor.toString(16);
 centerCircle.button.style.textDecoration = "none";
 centerCircle.button.style.visibility = "hidden";
-document.body.appendChild(centerCircle.button);
+document.body.appendChild(centerCircle.button); */
 
 app.stage.addChild(centerCircle);
 
@@ -103,6 +104,27 @@ centerCircle.text = new PIXI.Text('loading', centerCircle.textStyle);
 centerCircle.text.anchor.x = 0.5;
 centerCircle.text.anchor.y = 0.5;
 centerCircle.addChild(centerCircle.text);
+
+centerCircle.down = false;
+centerCircle.over = false;
+centerCircle.pointerdown = (e) => {
+    centerCircle.down = true;
+};
+centerCircle.pointercancel = (e) => {
+    centerCircle.down = false;
+};
+centerCircle.pointerup = (e) => {
+    centerCircle.down = false;
+};
+centerCircle.pointerupoutside = (e) => {
+    centerCircle.down = false;
+};
+centerCircle.pointerover = (e) => {
+    centerCircle.over = true;
+};
+centerCircle.pointerout = (e) => {
+    centerCircle.over = false;
+};
 
 
 loader.add('pebbles', 'images/pebbles.png')
@@ -243,9 +265,12 @@ function setup(loader, resources) {
 
     centerCircle.text.text = 'begin';
     centerCircle.textStyle.fill = flameColor;
-    centerCircle.button.style.visibility = "visible";
+    loadingProgress.tint = flameColor;
+    //centerCircle.button.style.visibility = "visible";
     //loadingProgress.visible = false;
-    centerCircle.button.onclick = fulllScreenButtonAction;
+    centerCircle.interactive = true;
+    centerCircle.buttonMode = true;
+    centerCircle.pointertap = centerCircle.click = fulllScreenButtonAction;
 }
 
 function resetPoints() {
@@ -263,7 +288,10 @@ function resetPoints() {
 }
 function fulllScreenButtonAction(event) {
     requestFullScreen();
-
+    state = play;
+    background.visible = true;
+    centerCircle.visible = false;
+    resize();
     resetPoints();
 }
 
@@ -282,12 +310,7 @@ function fullScreenChange() {
         state = loading;
         background.visible = false;
         centerCircle.visible = true;
-    } else {
-        state = play;
-        background.visible = true;
-        centerCircle.visible = false;
     }
-
 }
 
 function loop(delta){
@@ -295,6 +318,13 @@ function loop(delta){
     state(delta);
 }
 function loading(delta) {
+    if (centerCircle.over || centerCircle.down) {
+        centerCircle.scale.x = Math.min(1.4, centerCircle.scale.x * 1.2);
+        centerCircle.scale.y = Math.min(1.4, centerCircle.scale.y * 1.05);
+    } else {
+        centerCircle.scale.x = Math.max(0.8, centerCircle.scale.x * 0.99);
+        centerCircle.scale.y = Math.max(0.8, centerCircle.scale.y * 0.97);
+    }
     for (let id in sounds) {
         if (sounds.hasOwnProperty(id)) {
             try {
