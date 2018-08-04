@@ -148,12 +148,15 @@ function setup(loader, resources) {
 
     sparkles = new Container(); //ParticleContainer();
 
+    //let ambientLight = new PIXI.lights.AmbientLight({color: 0xFFFFFF, brightness: 10});
+
     // Create a background container
     background = new Container();
     background.addChild(
         normals,
         diffuse,
-        sparkles
+        sparkles,
+        //ambientLight,
     );
     background.visible = false;
 
@@ -170,7 +173,7 @@ function setup(loader, resources) {
     fire_sound.volume = 0.5;
 
     flame_sound = resources.flame.sound;
-    flame_sound.volume = 5;
+    flame_sound.volume = 10;
 
     points = {};
     last_points = {};
@@ -193,7 +196,7 @@ function setup(loader, resources) {
             downs[event.data.pointerId] = true;
 
             sounds[event.data.pointerId] = flame_sound.play({loop: true, start: Math.random() * flame_sound.duration});
-            sounds[event.data.pointerId].volume = 0;
+            sounds[event.data.pointerId].volume = 0.1;
         }
     });
 
@@ -281,6 +284,14 @@ function loading(delta) {
     } else {
         centerCircle.scale.x = Math.max(1, centerCircle.scale.x * 0.92);
         centerCircle.scale.y = Math.max(1, centerCircle.scale.y * 0.92);
+    }
+
+    for (let id in sounds) {
+        if (sounds.hasOwnProperty(id)) {
+            try {
+                sounds[id].stop()
+            } catch {}
+        }
     }
 }
 function play(delta) {
