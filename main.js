@@ -253,7 +253,12 @@ function setup(loader, resources) {
     };
 }
 
-function fullScreenChange(event) {
+function fullscreenChangeHandler(event) {
+    fullScreenChange();
+    resize();
+}
+
+function fullScreenChange() {
     if (!screenfull.isFullscreen) {
         points = {};
         last_points = {};
