@@ -26,7 +26,7 @@ let app = new Application({
 app.renderer.view.style.position = "absolute";
 app.renderer.view.style.display = "block";
 app.renderer.autoResize = true;
-app.renderer.plugins.interaction.autoPreventDefault = false;
+//app.renderer.plugins.interaction.autoPreventDefault = false;
 
 //Add the canvas that Pixi automatically created for you to the HTML document
 document.body.appendChild(app.view);
@@ -62,9 +62,32 @@ centerCircleGraphic.beginFill(0x000000);
 centerCircleGraphic.drawCircle(0, 0, centerCircleRadius);
 centerCircleGraphic.endFill();
 
+let flameColor = 0xffee99;
+
 let centerCircle = new Sprite(app.renderer.generateTexture(centerCircleGraphic));
 centerCircle.x = SIZE/2;
 centerCircle.y = SIZE/2;
+
+centerCircle.button =  document.createElement("input");
+centerCircle.button.type = "button";
+centerCircle.button.style.width = "13.33vmax";
+centerCircle.button.style.height = "13.33vmax";
+centerCircle.button.style.borderRadius = "50%";
+centerCircle.button.style.position = "absolute";
+centerCircle.button.style.margin = "0px";
+centerCircle.button.style.top = "50%";
+centerCircle.button.style.left = "50%";
+centerCircle.button.style.transform = "translate(-50%, -50%)";
+centerCircle.button.style.backgroundImage = "none";
+centerCircle.button.style.backgroundColor = "transparent";
+centerCircle.button.style.color = "transparent";
+centerCircle.button.style.outline = "none";
+centerCircle.button.style.borderWidth = "10px";
+centerCircle.button.style.borderColor = "#" + flameColor.toString(16);
+centerCircle.button.style.textDecoration = "none";
+centerCircle.button.style.visibility = "hidden";
+document.body.appendChild(centerCircle.button);
+
 app.stage.addChild(centerCircle);
 
 centerCircle.anchor.set(0.5, 0.5);
@@ -80,27 +103,6 @@ centerCircle.text = new PIXI.Text('loading', centerCircle.textStyle);
 centerCircle.text.anchor.x = 0.5;
 centerCircle.text.anchor.y = 0.5;
 centerCircle.addChild(centerCircle.text);
-
-centerCircle.over = false;
-centerCircle.pointerdown = (e) => {
-    centerCircle.down = true;
-};
-centerCircle.pointercancel = (e) => {
-    centerCircle.down = false;
-};
-centerCircle.pointerup = (e) => {
-    centerCircle.down = false;
-};
-centerCircle.pointerupoutside = (e) => {
-    centerCircle.down = false;
-};
-
-centerCircle.pointerover = (e) => {
-    centerCircle.over = true;
-};
-centerCircle.pointerout = (e) => {
-    centerCircle.over = false;
-};
 
 
 loader.add('pebbles', 'images/pebbles.png')
@@ -119,7 +121,7 @@ function loadProgressHandler(loader, resource) {
 }
 
 let state;
-    max_duration = 50;
+    max_duration = 30;
     max_height = 0.01;
     max_brightness = 10;
 
@@ -148,7 +150,7 @@ function setup(loader, resources) {
 
     sparkles = new Container(); //ParticleContainer();
 
-    //let ambientLight = new PIXI.lights.AmbientLight({color: 0xFFFFFF, brightness: 10});
+    //stage.addChild(new PIXI.lights.AmbientLight(0xFFFFFF, 0.2));
 
     // Create a background container
     background = new Container();
@@ -156,7 +158,6 @@ function setup(loader, resources) {
         normals,
         diffuse,
         sparkles,
-        //ambientLight,
     );
     background.visible = false;
 
@@ -241,16 +242,29 @@ function setup(loader, resources) {
     }
 
     centerCircle.text.text = 'begin';
-    centerCircle.interactive = true;
-    centerCircle.buttonMode = true;
-    centerCircle.pointertap = centerCircle.click = (e) => {
-        requestFullScreen();
+    centerCircle.textStyle.fill = flameColor;
+    centerCircle.button.style.visibility = "visible";
+    //loadingProgress.visible = false;
+    centerCircle.button.onclick = fulllScreenButtonAction;
+}
 
-        points = {};
-        last_points = {};
-        downs = {};
-        sounds = {};
-    };
+function resetPoints() {
+    for (let id in sounds) {
+        if (sounds.hasOwnProperty(id)) {
+            try {
+                sounds[id].stop()
+            } catch {}
+        }
+    }
+    points = {};
+    last_points = {};
+    downs = {};
+    sounds = {};
+}
+function fulllScreenButtonAction(event) {
+    requestFullScreen();
+
+    resetPoints();
 }
 
 function fullscreenChangeHandler(event) {
@@ -265,12 +279,10 @@ function fullScreenChange() {
         downs = {};
         sounds = {};
 
-        app.renderer.plugins.interaction.autoPreventDefault = false;
         state = loading;
         background.visible = false;
         centerCircle.visible = true;
     } else {
-        app.renderer.plugins.interaction.autoPreventDefault = true;
         state = play;
         background.visible = true;
         centerCircle.visible = false;
@@ -283,14 +295,6 @@ function loop(delta){
     state(delta);
 }
 function loading(delta) {
-    if (centerCircle.over || centerCircle.down) {
-        centerCircle.scale.x = Math.min(1.4, centerCircle.scale.x * 1.05);
-        centerCircle.scale.y = Math.min(1.4, centerCircle.scale.y * 1.05);
-    } else {
-        centerCircle.scale.x = Math.max(1, centerCircle.scale.x * 0.92);
-        centerCircle.scale.y = Math.max(1, centerCircle.scale.y * 0.92);
-    }
-
     for (let id in sounds) {
         if (sounds.hasOwnProperty(id)) {
             try {
@@ -326,7 +330,7 @@ function play(delta) {
 
         for (let i = 0; i < 1; i++) {
             // Create the point light
-            const light = new PIXI.lights.PointLight(0xffffcc, max_brightness); //, 300);
+            const light = new PIXI.lights.PointLight(flameColor, max_brightness); //, 300);
             light.lightHeight = max_height;
             light.x = point.x;
             light.y = point.y;
