@@ -77,6 +77,14 @@ centerCircle.text.anchor.x = 0.5;
 centerCircle.text.anchor.y = 0.5;
 centerCircle.addChild(centerCircle.text);
 
+centerCircle.over = false;
+centerCircle.pointerover = (e) => {
+    centerCircle.over = true;
+};
+centerCircle.pointerout = (e) => {
+    centerCircle.over = false;
+};
+
 loader.add('pebbles', 'images/pebbles.png')
     .add('pebbles_n', 'images/pebbles_n.png')
     .add('fire', 'sounds/fire.mp3')
@@ -129,6 +137,7 @@ function setup(loader, resources) {
         diffuse,
         sparkles
     );
+    background.visible = false;
 
     app.stage.addChild(
         // put all layers for deferred rendering of normals
@@ -152,7 +161,7 @@ function setup(loader, resources) {
 
     app.renderer.plugins.interaction.on('pointermove', event => {
         let point = event.data.global;
-        point = new PIXI.Point((point.x - app.stage.x)/app.stage.scale.x, (point.y - app.stage.y)/app.stage.scale.y);
+        point = new PIXI.Point((point.x - app.stage.x) / app.stage.scale.x, (point.y - app.stage.y) / app.stage.scale.y);
         points[event.data.pointerId] = point;
     });
 
@@ -161,37 +170,43 @@ function setup(loader, resources) {
         point = new PIXI.Point((point.x - app.stage.x)/app.stage.scale.x, (point.y - app.stage.y)/app.stage.scale.y);
         points[event.data.pointerId] = point;
         downs[event.data.pointerId] = true;
-        sounds[event.data.pointerId] = flame_sound.play({loop: true, start: Math.random() * flame_sound.duration});
-        sounds[event.data.pointerId].volume = 0;
+
+        if (state === play) {
+            sounds[event.data.pointerId] = flame_sound.play({loop: true, start: Math.random() * flame_sound.duration});
+            sounds[event.data.pointerId].volume = 0;
+        }
     });
 
     app.renderer.plugins.interaction.on('pointerup', event => {
-        //points[event.data.pointerId] = event.data.global;
         downs[event.data.pointerId] = false;
-        if (sounds.hasOwnProperty(event.data.pointerId)) {
-            sounds[event.data.pointerId].stop();
+        if (state === play) {
+            if (sounds.hasOwnProperty(event.data.pointerId)) {
+                sounds[event.data.pointerId].stop();
+            }
         }
     });
     app.renderer.plugins.interaction.on('pointerout', event => {
-        //points[event.data.pointerId] = event.data.global;
         downs[event.data.pointerId] = false;
-        if (sounds.hasOwnProperty(event.data.pointerId)) {
-            sounds[event.data.pointerId].stop();
+        if (state === play) {
+            if (sounds.hasOwnProperty(event.data.pointerId)) {
+                sounds[event.data.pointerId].stop();
+            }
         }
     });
     app.renderer.plugins.interaction.on('pointercancel', event => {
-        //points[event.data.pointerId] = event.data.global;
         downs[event.data.pointerId] = false;
-        if (sounds.hasOwnProperty(event.data.pointerId)) {
-            sounds[event.data.pointerId].stop();
+        if (state === play) {
+            if (sounds.hasOwnProperty(event.data.pointerId)) {
+                sounds[event.data.pointerId].stop();
+            }
         }
     });
 
-    state = play;
+    state = loading;
     app.ticker.add(loop);
 
     if (screenfull.enabled) {
-        screenfull.on('change', leaveFullscreen);
+        screenfull.on('change', fullScreenChange);
     }
 
     centerCircle.text.text = 'begin';
@@ -199,23 +214,34 @@ function setup(loader, resources) {
     centerCircle.buttonMode = true;
     centerCircle.pointertap = (e) => {
         requestFullScreen();
-        centerCircle.visible = false;
     };
-
 }
 
-function leaveFullscreen(event) {
+function fullScreenChange(event) {
     if (!screenfull.isFullscreen) {
-        //background.visible = false;
-        //app.ticker.remove(loop);
+        state = loading;
+        background.visible = false;
         centerCircle.visible = true;
+    } else {
+        state = play;
+        background.visible = true;
+        centerCircle.visible = false;
     }
+
 }
 
 function loop(delta){
     state(delta);
 }
-
+function loading(delta) {
+    if (centerCircle.over) {
+        centerCircle.scale.x = Math.min(1.2, centerCircle.scale.x * 1.05);
+        centerCircle.scale.y = Math.min(1.2, centerCircle.scale.y * 1.05);
+    } else {
+        centerCircle.scale.x = Math.max(1, centerCircle.scale.x * 0.95);
+        centerCircle.scale.y = Math.max(1, centerCircle.scale.y * 0.95);
+    }
+}
 function play(delta) {
     //if (pointerDown) {
     for (let id in downs) {
@@ -255,8 +281,8 @@ function play(delta) {
 
             light.duration = Math.random() * max_duration;
 
-            const start_time = Math.random() * (fire_sound.duration - light.duration/60);
-            const end_time = start_time + light.duration/60;
+            const start_time = 2 + Math.random() * (fire_sound.duration - light.duration/60 - 4);
+            const end_time = start_time + light.duration/60 + 1;
 
             light.sound = fire_sound.play({start: start_time, end: end_time});
 
@@ -290,6 +316,7 @@ function play(delta) {
     });
 
     removes.forEach(e => {
+        e.sound.stop();
         sparkles.removeChild(e);
     });
 }
