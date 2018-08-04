@@ -303,9 +303,9 @@ function play(delta) {
             let vy = point.y - last_point.y;
             let speed = Math.sqrt(vx*vx + vy*vy);
 
-            if (sounds.hasOwnProperty(id)) {
+            try {
                 sounds[id].volume = 0.6 * sounds[id].volume + 0.4 * Math.min(1, speed/100);
-            }
+            } catch {}
         }
 
         for (let i = 0; i < 1; i++) {
