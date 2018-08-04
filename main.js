@@ -238,6 +238,7 @@ function fullScreenChange(event) {
 }
 
 function loop(delta){
+    fullScreenChange();
     state(delta);
 }
 function loading(delta) {
@@ -312,8 +313,10 @@ function play(delta) {
 
         e.lightHeight = max_height * e.duration/max_duration;
         e.brightness = max_brightness * e.duration/max_duration;
-        if (e.sound.progress < 1) {
+        try {
             e.sound.volume = e.duration/max_duration;
+        } catch {
+            console.log('volume set failed');
         }
 
         e.duration -= delta;
