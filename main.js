@@ -13,7 +13,7 @@ let Application = PIXI.Application;
 const {diffuseGroup, normalGroup, lightGroup} = PIXI.lights;
 const {Layer, Stage} = PIXI.display;
 
-let SIZE = 1920;
+let SIZE = 1024;
 let ratio = window.devicePixelRatio;
 
 //Create a Pixi Application
@@ -58,7 +58,7 @@ function requestFullScreen(event) {
     }
 }
 
-let centerCircleRadius = 128;
+let centerCircleRadius = 112;
 let centerCircleGraphic = new Graphics();
 centerCircleGraphic.beginFill(0x000000);
 centerCircleGraphic.drawCircle(0, 0, centerCircleRadius);
@@ -147,7 +147,7 @@ function loadProgressHandler(loader, resource) {
 }
 
 let state;
-    max_duration = 30;
+    max_duration = 50;
     max_height = 0.01;
     max_brightness = 10;
 
@@ -333,8 +333,8 @@ function loading(delta) {
         loadingProgress.scale.x = Math.min(0.7, loadingProgress.scale.x * 1.1);
         loadingProgress.scale.y = Math.min(0.7, loadingProgress.scale.y * 1.05);
     } else {
-        loadingProgress.scale.x = Math.max(0.4, loadingProgress.scale.x * 0.9);
-        loadingProgress.scale.y = Math.max(0.4, loadingProgress.scale.y * 0.95);
+        loadingProgress.scale.x = Math.max(0.3, loadingProgress.scale.x * 0.9);
+        loadingProgress.scale.y = Math.max(0.3, loadingProgress.scale.y * 0.95);
     }
 
     for (let id in sounds) {
