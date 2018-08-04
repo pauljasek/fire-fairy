@@ -38,7 +38,9 @@ document.body.scroll = 'no'; // ie only
 
 resize();
 
+window.onload = resize;
 window.onresize = resize;
+
 function resize() {
     app.renderer.resize(window.innerWidth, window.innerHeight);
     let maxDimension = Math.max(window.innerWidth, window.innerHeight);
@@ -219,7 +221,9 @@ function setup(loader, resources) {
             point = new PIXI.Point((point.x - app.stage.x)/app.stage.scale.x, (point.y - app.stage.y)/app.stage.scale.y);
             points[event.data.pointerId] = point;
             downs[event.data.pointerId] = true;
-
+            try {
+                sounds[event.data.pointerId].stop();
+            } catch {}
             sounds[event.data.pointerId] = flame_sound.play({loop: true, start: Math.random() * flame_sound.duration});
             sounds[event.data.pointerId].volume = 0.1;
         }
