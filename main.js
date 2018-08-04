@@ -93,6 +93,8 @@ app.stage.addChild(centerCircle);
 
 centerCircle.anchor.set(0.5, 0.5);
 let loadingProgress = new Graphics();
+loadingProgress.scale.x = 0.5;
+loadingProgress.scale.y = 0.5;
 centerCircle.addChild(loadingProgress);
 
 centerCircle.textStyle = new PIXI.TextStyle({
@@ -137,8 +139,8 @@ loader.add('pebbles', 'images/pebbles.png')
 function loadProgressHandler(loader, resource) {
     let angle = loader.progress/100 * 2 * Math.PI - Math.PI/2;
     loadingProgress.clear();
-    loadingProgress.lineStyle(10, 0xffffff);
-    loadingProgress.arc(0, 0, centerCircleRadius - 5, -Math.PI/2, angle);
+    loadingProgress.lineStyle(20, 0xffffff);
+    loadingProgress.arc(0, 0, centerCircleRadius*2 - 10, -Math.PI/2, angle);
     loadingProgress.endFill();
 }
 
@@ -265,7 +267,12 @@ function setup(loader, resources) {
 
     centerCircle.text.text = 'begin';
     centerCircle.textStyle.fill = flameColor;
-    loadingProgress.tint = flameColor;
+    //loadingProgress.tint = flameColor;
+    loadingProgress.clear();
+    loadingProgress.lineStyle(20, flameColor);
+    loadingProgress.drawCircle(0, 0, centerCircleRadius*2 - 10);
+    loadingProgress.endFill();
+
     //centerCircle.button.style.visibility = "visible";
     //loadingProgress.visible = false;
     centerCircle.interactive = true;
@@ -295,7 +302,7 @@ function fulllScreenButtonAction(event) {
     resetPoints();
 }
 
-function fullscreenChangeHandler(event) {
+function fullscreenChangeHandler() {
     fullScreenChange();
     resize();
 }
@@ -314,17 +321,18 @@ function fullScreenChange() {
 }
 
 function loop(delta){
-    fullScreenChange();
+    resize();
     state(delta);
 }
 function loading(delta) {
     if (centerCircle.over || centerCircle.down) {
-        centerCircle.scale.x = Math.min(1.4, centerCircle.scale.x * 1.1);
-        centerCircle.scale.y = Math.min(1.4, centerCircle.scale.y * 1.05);
+        loadingProgress.scale.x = Math.min(0.7, loadingProgress.scale.x * 1.1);
+        loadingProgress.scale.y = Math.min(0.7, loadingProgress.scale.y * 1.05);
     } else {
-        centerCircle.scale.x = Math.max(0.8, centerCircle.scale.x * 0.9);
-        centerCircle.scale.y = Math.max(0.8, centerCircle.scale.y * 0.95);
+        loadingProgress.scale.x = Math.max(0.4, loadingProgress.scale.x * 0.9);
+        loadingProgress.scale.y = Math.max(0.4, loadingProgress.scale.y * 0.95);
     }
+
     for (let id in sounds) {
         if (sounds.hasOwnProperty(id)) {
             try {
