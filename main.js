@@ -26,6 +26,7 @@ let app = new Application({
 app.renderer.view.style.position = "absolute";
 app.renderer.view.style.display = "block";
 app.renderer.autoResize = true;
+app.renderer.plugins.interaction.autoPreventDefault = false;
 
 //Add the canvas that Pixi automatically created for you to the HTML document
 document.body.appendChild(app.view);
@@ -166,6 +167,8 @@ function setup(loader, resources) {
         let point = event.data.global;
         point = new PIXI.Point((point.x - app.stage.x) / app.stage.scale.x, (point.y - app.stage.y) / app.stage.scale.y);
         points[event.data.pointerId] = point;
+        if (state === play) {
+        }
     });
 
     app.renderer.plugins.interaction.on('pointerdown', event => {
@@ -199,6 +202,7 @@ function setup(loader, resources) {
     app.renderer.plugins.interaction.on('pointercancel', event => {
         downs[event.data.pointerId] = false;
         if (state === play) {
+            event.preventDefault();
             if (sounds.hasOwnProperty(event.data.pointerId)) {
                 sounds[event.data.pointerId].stop();
             }
