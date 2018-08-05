@@ -223,7 +223,7 @@ function setup(loader, resources) {
             downs[event.data.pointerId] = true;
             try {
                 sounds[event.data.pointerId].stop();
-            } catch {}
+            } catch(err) {}
             sounds[event.data.pointerId] = flame_sound.play({loop: true, start: Math.random() * flame_sound.duration});
             sounds[event.data.pointerId].volume = 0.1;
         }
@@ -289,7 +289,7 @@ function resetPoints() {
         if (sounds.hasOwnProperty(id)) {
             try {
                 sounds[id].stop()
-            } catch {}
+            } catch(err) {}
         }
     }
     points = {};
@@ -341,7 +341,7 @@ function loading(delta) {
         if (sounds.hasOwnProperty(id)) {
             try {
                 sounds[id].stop()
-            } catch {}
+            } catch(err) {}
         }
     }
 }
@@ -367,7 +367,7 @@ function play(delta) {
 
             try {
                 sounds[id].volume = 0.6 * sounds[id].volume + 0.4 * Math.min(1, speed/100);
-            } catch {}
+            } catch(err) {}
         }
 
         for (let i = 0; i < 1; i++) {
@@ -410,7 +410,7 @@ function play(delta) {
         e.brightness = max_brightness * e.duration/max_duration;
         try {
             e.sound.volume = e.duration/max_duration;
-        } catch {
+        } catch(err) {
         }
 
         e.duration -= delta;
