@@ -147,9 +147,9 @@ function loadProgressHandler(loader, resource) {
 }
 
 let state;
-    max_duration = 50;
+    max_duration = 40;
     max_height = 0.01;
-    max_brightness = 10;
+    max_brightness = 5;
 
 let points, last_points, downs, sounds;
 let flame_sound, fire_sound;
@@ -197,10 +197,10 @@ function setup(loader, resources) {
     );
 
     fire_sound = resources.fire.sound;
-    fire_sound.volume = 0.5;
+    fire_sound.volume = 0.2;
 
     flame_sound = resources.flame.sound;
-    flame_sound.volume = 10;
+    flame_sound.volume = 1;
 
     points = {};
     last_points = {};
@@ -216,6 +216,13 @@ function setup(loader, resources) {
     });
 
     app.renderer.plugins.interaction.on('pointerdown', event => {
+        if (event.data.pointerId >= 10) {
+            downs[1] = false;
+            try {
+                sounds[1].stop()
+            } catch(err) {}
+        }
+
         if (state === play) {
             let point = event.data.global;
             point = new PIXI.Point((point.x - app.stage.x)/app.stage.scale.x, (point.y - app.stage.y)/app.stage.scale.y);
@@ -225,40 +232,54 @@ function setup(loader, resources) {
                 sounds[event.data.pointerId].stop();
             } catch(err) {}
             sounds[event.data.pointerId] = flame_sound.play({loop: true, start: Math.random() * flame_sound.duration});
-            sounds[event.data.pointerId].volume = 0.1;
+            sounds[event.data.pointerId].volume = 0;
         }
     });
 
     app.renderer.plugins.interaction.on('pointerup', event => {
-        if (state === play) {
-            downs[event.data.pointerId] = false;
-            if (sounds.hasOwnProperty(event.data.pointerId)) {
+        downs[event.data.pointerId] = false;
+        last_points[event.data.pointerId] = null;
+        if (sounds.hasOwnProperty(event.data.pointerId)) {
+            try {
                 sounds[event.data.pointerId].stop();
-            }
+            } catch(err) {}
         }
     });
     app.renderer.plugins.interaction.on('pointerupoutside', event => {
-        if (state === play) {
-            downs[event.data.pointerId] = false;
-            if (sounds.hasOwnProperty(event.data.pointerId)) {
+        downs[event.data.pointerId] = false;
+        last_points[event.data.pointerId] = null;
+        if (sounds.hasOwnProperty(event.data.pointerId)) {
+            try {
                 sounds[event.data.pointerId].stop();
-            }
+            } catch(err) {}
         }
     });
     app.renderer.plugins.interaction.on('pointerout', event => {
-        if (state === play) {
-            downs[event.data.pointerId] = false;
-            if (sounds.hasOwnProperty(event.data.pointerId)) {
+        downs[event.data.pointerId] = false;
+        last_points[event.data.pointerId] = null;
+        if (sounds.hasOwnProperty(event.data.pointerId)) {
+            try {
                 sounds[event.data.pointerId].stop();
-            }
+            } catch(err) {}
         }
     });
     app.renderer.plugins.interaction.on('pointercancel', event => {
-        if (state === play) {
-            downs[event.data.pointerId] = false;
-            if (sounds.hasOwnProperty(event.data.pointerId)) {
+        downs[event.data.pointerId] = false;
+        last_points[event.data.pointerId] = null;
+        if (sounds.hasOwnProperty(event.data.pointerId)) {
+            try {
                 sounds[event.data.pointerId].stop();
-            }
+            } catch(err) {}
+        }
+    });
+    app.renderer.plugins.interaction.on('lostpointercapture', event => {
+        console.log(event.data);
+        downs[event.data.pointerId] = false;
+        last_points[event.data.pointerId] = null;
+        if (sounds.hasOwnProperty(event.data.pointerId)) {
+            try {
+                sounds[event.data.pointerId].stop();
+            } catch(err) {}
         }
     });
 
@@ -359,14 +380,14 @@ function play(delta) {
             continue;
         }
 
-        if (last_points.hasOwnProperty(id)) {
+        if (last_points.hasOwnProperty(id) && last_points[id] !== null) {
             let last_point = last_points[id];
             let vx = point.x - last_point.x;
             let vy = point.y - last_point.y;
             let speed = Math.sqrt(vx*vx + vy*vy);
 
             try {
-                sounds[id].volume = 0.6 * sounds[id].volume + 0.4 * Math.min(1, speed/100);
+                sounds[id].volume = 0.7 * sounds[id].volume + 0.3 * Math.min(1, speed/100);
             } catch(err) {}
         }
 
