@@ -13,7 +13,7 @@ let Application = PIXI.Application;
 const {diffuseGroup, normalGroup, lightGroup} = PIXI.lights;
 const {Layer, Stage} = PIXI.display;
 
-let SIZE = 1024;
+let SIZE = 720;
 let ratio = window.devicePixelRatio;
 
 //Create a Pixi Application
@@ -58,7 +58,7 @@ function requestFullScreen(event) {
     }
 }
 
-let centerCircleRadius = 112;
+let centerCircleRadius = 200;
 let centerCircleGraphic = new Graphics();
 centerCircleGraphic.beginFill(0x000000);
 centerCircleGraphic.drawCircle(0, 0, centerCircleRadius);
@@ -95,8 +95,8 @@ app.stage.addChild(centerCircle);
 
 centerCircle.anchor.set(0.5, 0.5);
 let loadingProgress = new Graphics();
-loadingProgress.scale.x = 0.5;
-loadingProgress.scale.y = 0.5;
+loadingProgress.scale.x = 0.25;
+loadingProgress.scale.y = 0.25;
 centerCircle.addChild(loadingProgress);
 
 centerCircle.textStyle = new PIXI.TextStyle({
@@ -141,15 +141,15 @@ loader.add('pebbles', 'images/pebbles.png')
 function loadProgressHandler(loader, resource) {
     let angle = loader.progress/100 * 2 * Math.PI - Math.PI/2;
     loadingProgress.clear();
-    loadingProgress.lineStyle(20, 0xffffff);
-    loadingProgress.arc(0, 0, centerCircleRadius*2 - 10, -Math.PI/2, angle);
+    loadingProgress.lineStyle(40, 0xffffff);
+    loadingProgress.arc(0, 0, centerCircleRadius*2 - 20, -Math.PI/2, angle);
     loadingProgress.endFill();
 }
 
 let state;
-    max_duration = 40;
+    max_duration = 30;
     max_height = 0.008;
-    max_brightness = 10/window.devicePixelRatio;
+    max_brightness = 8/window.devicePixelRatio;
     max_velocity = 5;
     min_velocity = 2;
     decay_rate = 0.2;
@@ -200,10 +200,10 @@ function setup(loader, resources) {
     );
 
     fire_sound = resources.fire.sound;
-    fire_sound.volume = 0.2;
+    fire_sound.volume = 0.1;
 
     flame_sound = resources.flame.sound;
-    flame_sound.volume = 0.2;
+    flame_sound.volume = 0.7;
 
     resetPoints();
 
@@ -287,8 +287,8 @@ function setup(loader, resources) {
     centerCircle.textStyle.fill = flameColor;
     //loadingProgress.tint = flameColor;
     loadingProgress.clear();
-    loadingProgress.lineStyle(20, flameColor);
-    loadingProgress.drawCircle(0, 0, centerCircleRadius*2 - 10);
+    loadingProgress.lineStyle(40, flameColor);
+    loadingProgress.drawCircle(0, 0, centerCircleRadius*2 - 20);
     loadingProgress.endFill();
 
     //centerCircle.button.style.visibility = "visible";
@@ -335,11 +335,11 @@ function loop(delta){
 }
 function loading(delta) {
     if (centerCircle.over || centerCircle.down) {
-        loadingProgress.scale.x = Math.min(0.7, loadingProgress.scale.x * 1.1);
-        loadingProgress.scale.y = Math.min(0.7, loadingProgress.scale.y * 1.05);
+        loadingProgress.scale.x = Math.min(0.35, loadingProgress.scale.x * 1.1);
+        loadingProgress.scale.y = Math.min(0.35, loadingProgress.scale.y * 1.05);
     } else {
-        loadingProgress.scale.x = Math.max(0.3, loadingProgress.scale.x * 0.9);
-        loadingProgress.scale.y = Math.max(0.3, loadingProgress.scale.y * 0.95);
+        loadingProgress.scale.x = Math.max(0.15, loadingProgress.scale.x * 0.9);
+        loadingProgress.scale.y = Math.max(0.15, loadingProgress.scale.y * 0.95);
     }
 }
 function play(delta) {
