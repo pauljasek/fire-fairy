@@ -148,8 +148,11 @@ function loadProgressHandler(loader, resource) {
 
 let state;
     max_duration = 40;
-    max_height = 0.01;
-    max_brightness = 5;
+    max_height = 0.008;
+    max_brightness = 10;
+    max_velocity = 5;
+    min_velocity = 2;
+    decay_rate = 0.2;
 
 let points, last_points, downs, sounds;
 let flame_sound, fire_sound;
@@ -200,7 +203,8 @@ function setup(loader, resources) {
     fire_sound.volume = 0.2;
 
     flame_sound = resources.flame.sound;
-    flame_sound.volume = 1;
+    flame_sound.filters = [new PIXI.sound.filters.DistortionFilter(0.001)];
+    flame_sound.volume = 2;
 
     points = {};
     last_points = {};
@@ -387,7 +391,7 @@ function play(delta) {
             let speed = Math.sqrt(vx*vx + vy*vy);
 
             try {
-                sounds[id].volume = 0.7 * sounds[id].volume + 0.3 * Math.min(1, speed/100);
+                sounds[id].volume = 0.8 * sounds[id].volume + 0.2 * Math.min(1, speed/100);
             } catch(err) {}
         }
 
@@ -395,13 +399,14 @@ function play(delta) {
             // Create the point light
             const light = new PIXI.lights.PointLight(flameColor, max_brightness); //, 300);
             light.lightHeight = max_height;
-            light.x = point.x;
-            light.y = point.y;
+            light.x = point.x + Math.random() * 20 - 10;
+            light.y = point.y + Math.random() * 20 - 10;
 
-            let angle = Math.random() * 2 * Math.PI;
+            let angle = (Math.random() - 1.5) * Math.PI/2
 
-            light.vx = Math.cos(angle) * 2;
-            light.vy = Math.sin(angle) * 2;
+            let velocity = Math.random() * (max_velocity - min_velocity) + min_velocity;
+            light.vx = Math.cos(angle) * velocity;
+            light.vy = Math.sin(angle) * velocity;
 
             light.duration = Math.random() * max_duration;
 
@@ -424,13 +429,13 @@ function play(delta) {
         e.y += e.vy * delta;
 
         //e.vx *= Math.pow(1.01, delta);
-        e.vy -= 0.5;
-        e.vy *= Math.pow(1.01, delta);
+        //e.vy -= 0.3;
+        e.vy *= Math.pow(1.03, delta);
 
-        e.lightHeight = max_height * e.duration/max_duration;
-        e.brightness = max_brightness * e.duration/max_duration;
+        e.lightHeight = max_height * Math.pow(e.duration/max_duration, decay_rate);
+        e.brightness = max_brightness * Math.pow(e.duration/max_duration, decay_rate);
         try {
-            e.sound.volume = e.duration/max_duration;
+            e.sound.volume = Math.sqrt(e.duration/max_duration);
         } catch(err) {
         }
 
