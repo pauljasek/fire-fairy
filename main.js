@@ -149,7 +149,7 @@ function loadProgressHandler(loader, resource) {
 let state;
     max_duration = 40;
     max_height = 0.008;
-    max_brightness = 10;
+    max_brightness = 10/window.devicePixelRatio;
     max_velocity = 5;
     min_velocity = 2;
     decay_rate = 0.2;
@@ -203,19 +203,39 @@ function setup(loader, resources) {
     fire_sound.volume = 0.2;
 
     flame_sound = resources.flame.sound;
-    flame_sound.filters = [new PIXI.sound.filters.DistortionFilter(0.001)];
-    flame_sound.volume = 2;
+    flame_sound.volume = 0.5;
 
-    points = {};
-    last_points = {};
-    downs = {};
-    sounds = {};
+    resetPoints();
 
     app.renderer.plugins.interaction.on('pointermove', event => {
         if (state === play) {
             let point = event.data.global;
             point = new PIXI.Point((point.x - app.stage.x) / app.stage.scale.x, (point.y - app.stage.y) / app.stage.scale.y);
             points[event.data.pointerId] = point;
+
+            id = event.data.pointerId;
+            if (last_points.hasOwnProperty(id) && last_points[id] !== null) {
+                let last_point = last_points[id];
+                let vx = point.x - last_point.x;
+                let vy = point.y - last_point.y;
+                let velocity = new PIXI.Point(vx, vy);
+
+                if (velocities.hasOwnProperty(id) && velocities[id] !== null) {
+                    let last_velocity = velocities[id];
+                    let ax = vx - last_velocity.x;
+                    let ay = vy -last_velocity.y;
+                    let acceleration = Math.sqrt(ax*ax + ay*ay) * window.devicePixelRatio;
+                    let speed = Math.sqrt(vx*vx + vy*vy) * window.devicePixelRatio;
+
+                    let start_time = Math.random() * (flame_sound.duration - 0.6);
+                    let end_time = start_time + 0.6;
+                    sounds[id] = flame_sound.play({loop: false, start: start_time, end: end_time,})
+                    sounds[id].volume = Math.min(0.5, acceleration/40) + Math.min(0.5, speed/200);
+                }
+
+
+                velocities[id] = velocity;
+            }
         }
     });
 
@@ -232,59 +252,28 @@ function setup(loader, resources) {
             point = new PIXI.Point((point.x - app.stage.x)/app.stage.scale.x, (point.y - app.stage.y)/app.stage.scale.y);
             points[event.data.pointerId] = point;
             downs[event.data.pointerId] = true;
-            try {
-                sounds[event.data.pointerId].stop();
-            } catch(err) {}
-            sounds[event.data.pointerId] = flame_sound.play({loop: true, start: Math.random() * flame_sound.duration});
-            sounds[event.data.pointerId].volume = 0;
         }
     });
 
     app.renderer.plugins.interaction.on('pointerup', event => {
         downs[event.data.pointerId] = false;
         last_points[event.data.pointerId] = null;
-        if (sounds.hasOwnProperty(event.data.pointerId)) {
-            try {
-                sounds[event.data.pointerId].stop();
-            } catch(err) {}
-        }
+        velocities[event.data.pointerId] = null;
     });
     app.renderer.plugins.interaction.on('pointerupoutside', event => {
         downs[event.data.pointerId] = false;
         last_points[event.data.pointerId] = null;
-        if (sounds.hasOwnProperty(event.data.pointerId)) {
-            try {
-                sounds[event.data.pointerId].stop();
-            } catch(err) {}
-        }
+        velocities[event.data.pointerId] = null;
     });
     app.renderer.plugins.interaction.on('pointerout', event => {
         downs[event.data.pointerId] = false;
         last_points[event.data.pointerId] = null;
-        if (sounds.hasOwnProperty(event.data.pointerId)) {
-            try {
-                sounds[event.data.pointerId].stop();
-            } catch(err) {}
-        }
+        velocities[event.data.pointerId] = null;
     });
     app.renderer.plugins.interaction.on('pointercancel', event => {
         downs[event.data.pointerId] = false;
         last_points[event.data.pointerId] = null;
-        if (sounds.hasOwnProperty(event.data.pointerId)) {
-            try {
-                sounds[event.data.pointerId].stop();
-            } catch(err) {}
-        }
-    });
-    app.renderer.plugins.interaction.on('lostpointercapture', event => {
-        console.log(event.data);
-        downs[event.data.pointerId] = false;
-        last_points[event.data.pointerId] = null;
-        if (sounds.hasOwnProperty(event.data.pointerId)) {
-            try {
-                sounds[event.data.pointerId].stop();
-            } catch(err) {}
-        }
+        velocities[event.data.pointerId] = null;
     });
 
     state = loading;
@@ -310,15 +299,9 @@ function setup(loader, resources) {
 }
 
 function resetPoints() {
-    for (let id in sounds) {
-        if (sounds.hasOwnProperty(id)) {
-            try {
-                sounds[id].stop()
-            } catch(err) {}
-        }
-    }
     points = {};
     last_points = {};
+    velocities = {};
     downs = {};
     sounds = {};
 }
@@ -338,10 +321,7 @@ function fullscreenChangeHandler() {
 
 function fullScreenChange() {
     if (!screenfull.isFullscreen) {
-        points = {};
-        last_points = {};
-        downs = {};
-        sounds = {};
+        resetPoints();
 
         state = loading;
         background.visible = false;
@@ -377,22 +357,17 @@ function play(delta) {
             continue;
         }
 
+        if (sounds.hasOwnProperty(id)) {
+            try {
+                sounds[id].volume *= Math.pow(0.5, delta);
+            } catch (err) {}
+        }
+
         let down = downs[id];
         let point = points[id];
 
         if (down === false) {
             continue;
-        }
-
-        if (last_points.hasOwnProperty(id) && last_points[id] !== null) {
-            let last_point = last_points[id];
-            let vx = point.x - last_point.x;
-            let vy = point.y - last_point.y;
-            let speed = Math.sqrt(vx*vx + vy*vy);
-
-            try {
-                sounds[id].volume = 0.8 * sounds[id].volume + 0.2 * Math.min(1, speed/100);
-            } catch(err) {}
         }
 
         for (let i = 0; i < 1; i++) {
