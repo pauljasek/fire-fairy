@@ -203,7 +203,7 @@ function setup(loader, resources) {
     fire_sound.volume = 0.2;
 
     flame_sound = resources.flame.sound;
-    flame_sound.volume = 0.5;
+    flame_sound.volume = 0.2;
 
     resetPoints();
 
@@ -223,14 +223,17 @@ function setup(loader, resources) {
                 if (velocities.hasOwnProperty(id) && velocities[id] !== null) {
                     let last_velocity = velocities[id];
                     let ax = vx - last_velocity.x;
-                    let ay = vy -last_velocity.y;
+                    let ay = vy - last_velocity.y;
                     let acceleration = Math.sqrt(ax*ax + ay*ay) * window.devicePixelRatio;
                     let speed = Math.sqrt(vx*vx + vy*vy) * window.devicePixelRatio;
 
-                    let start_time = Math.random() * (flame_sound.duration - 0.6);
-                    let end_time = start_time + 0.6;
-                    sounds[id] = flame_sound.play({loop: false, start: start_time, end: end_time,})
-                    sounds[id].volume = Math.min(0.5, acceleration/40) + Math.min(0.5, speed/200);
+                    let start_time = Math.random() * (flame_sound.duration - 0.5);
+                    let end_time = start_time + 0.3;
+                    if (!sounds.hasOwnProperty(id)) {
+                        sounds[id] = [];
+                    }
+                    sounds[id].push(flame_sound.play({loop: false, start: start_time, end: end_time, volume: 0.75 * Math.min(1, speed/100) + 0.25 * Math.min(1, acceleration/20)}));
+                    //sounds[id].volume = 0.75 * Math.min(1, speed/100) + 0.25 * Math.min(1, acceleration/20);
                 }
 
 
@@ -242,9 +245,6 @@ function setup(loader, resources) {
     app.renderer.plugins.interaction.on('pointerdown', event => {
         if (event.data.pointerId >= 10) {
             downs[1] = false;
-            try {
-                sounds[1].stop()
-            } catch(err) {}
         }
 
         if (state === play) {
@@ -341,14 +341,6 @@ function loading(delta) {
         loadingProgress.scale.x = Math.max(0.3, loadingProgress.scale.x * 0.9);
         loadingProgress.scale.y = Math.max(0.3, loadingProgress.scale.y * 0.95);
     }
-
-    for (let id in sounds) {
-        if (sounds.hasOwnProperty(id)) {
-            try {
-                sounds[id].stop()
-            } catch(err) {}
-        }
-    }
 }
 function play(delta) {
     //if (pointerDown) {
@@ -358,9 +350,13 @@ function play(delta) {
         }
 
         if (sounds.hasOwnProperty(id)) {
-            try {
-                sounds[id].volume *= Math.pow(0.5, delta);
-            } catch (err) {}
+            for (let i = sounds[id].length; i > 0; i--) {
+                try {
+                    sounds[id][i].volume *= Math.pow(0.5, delta);
+                } catch (err){
+                    sounds[id].pop(i);
+                }
+            }
         }
 
         let down = downs[id];
