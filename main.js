@@ -18,7 +18,7 @@ let ratio = window.devicePixelRatio;
 
 //Create a Pixi Application
 let app = new Application({
-    antialias: true,    // default: false
+    antialias: false,    // default: false
     transparent: false, // default: false
     resolution: 1,       // default: 1
 });
