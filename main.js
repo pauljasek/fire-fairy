@@ -13,7 +13,7 @@ let Application = PIXI.Application;
 const {diffuseGroup, normalGroup, lightGroup} = PIXI.lights;
 const {Layer, Stage} = PIXI.display;
 
-let SIZE = 720;
+let SIZE = 640;
 let ratio = window.devicePixelRatio;
 
 //Create a Pixi Application
@@ -220,11 +220,11 @@ function setup(loader, resources) {
                 let vy = point.y - last_point.y;
                 let velocity = new PIXI.Point(vx, vy);
 
-                if (velocities.hasOwnProperty(id) && velocities[id] !== null) {
-                    let last_velocity = velocities[id];
-                    let ax = vx - last_velocity.x;
-                    let ay = vy - last_velocity.y;
-                    let acceleration = Math.sqrt(ax*ax + ay*ay) * window.devicePixelRatio;
+                //if (velocities.hasOwnProperty(id) && velocities[id] !== null) {
+                //    let last_velocity = velocities[id];
+                //    let ax = vx - last_velocity.x;
+                //    let ay = vy - last_velocity.y;
+                //    let acceleration = Math.sqrt(ax*ax + ay*ay) * window.devicePixelRatio;
                     let speed = Math.sqrt(vx*vx + vy*vy) * window.devicePixelRatio;
 
                     let start_time = Math.random() * (flame_sound.duration - 0.5);
@@ -232,12 +232,13 @@ function setup(loader, resources) {
                     if (!sounds.hasOwnProperty(id)) {
                         sounds[id] = [];
                     }
-                    sounds[id].push(flame_sound.play({loop: false, start: start_time, end: end_time, volume: 0.75 * Math.min(1, speed/100) + 0.25 * Math.min(1, acceleration/20)}));
+                    sounds[id].push(flame_sound.play(
+                        {loop: false, start: start_time, end: end_time, volume: Math.min(1, speed/100),}));
                     //sounds[id].volume = 0.75 * Math.min(1, speed/100) + 0.25 * Math.min(1, acceleration/20);
-                }
+                //}
 
 
-                velocities[id] = velocity;
+                //velocities[id] = velocity;
             }
         }
     });
@@ -255,26 +256,15 @@ function setup(loader, resources) {
         }
     });
 
-    app.renderer.plugins.interaction.on('pointerup', event => {
+    function pointerUpHandler(event) {
         downs[event.data.pointerId] = false;
         last_points[event.data.pointerId] = null;
-        velocities[event.data.pointerId] = null;
-    });
-    app.renderer.plugins.interaction.on('pointerupoutside', event => {
-        downs[event.data.pointerId] = false;
-        last_points[event.data.pointerId] = null;
-        velocities[event.data.pointerId] = null;
-    });
-    app.renderer.plugins.interaction.on('pointerout', event => {
-        downs[event.data.pointerId] = false;
-        last_points[event.data.pointerId] = null;
-        velocities[event.data.pointerId] = null;
-    });
-    app.renderer.plugins.interaction.on('pointercancel', event => {
-        downs[event.data.pointerId] = false;
-        last_points[event.data.pointerId] = null;
-        velocities[event.data.pointerId] = null;
-    });
+        //velocities[event.data.pointerId] = null;
+    }
+    app.renderer.plugins.interaction.on('pointerup', pointerUpHandler);
+    app.renderer.plugins.interaction.on('pointerupoutside', pointerUpHandler);
+    app.renderer.plugins.interaction.on('pointerout', pointerUpHandler);
+    app.renderer.plugins.interaction.on('pointercancel', pointerUpHandler);
 
     state = loading;
     app.ticker.add(loop);
@@ -301,7 +291,7 @@ function setup(loader, resources) {
 function resetPoints() {
     points = {};
     last_points = {};
-    velocities = {};
+    //velocities = {};
     downs = {};
     sounds = {};
 }
