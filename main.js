@@ -214,7 +214,7 @@ function setup(loader, resources) {
 
     flame_sound = resources.flame.sound;
     //flame_sound.volume = 0.7;
-    flame_sound.volume = 1;
+    flame_sound.volume = 2;
     flame_sounds = [];
     for (let i = 0; i < 11; i++) {
         flame_sounds.push(flame_sound.play({start: Math.random() * (flame_sound.duration - 1), loop: true}));
@@ -228,10 +228,6 @@ function setup(loader, resources) {
             if (!pointer_flame_sounds.hasOwnProperty(event.data.pointerId)) {
                 pointer_flame_sounds[event.data.pointerId] = flame_sounds[pointer_flame_sounds.length];
                 pointer_flame_sounds.length += 1
-            }
-            if (!pointer_fire_sounds.hasOwnProperty(event.data.pointerId)) {
-                pointer_fire_sounds[event.data.pointerId] = fire_sounds[pointer_fire_sounds.length];
-                pointer_fire_sounds.length += 1
             }
 
             let point = event.data.global;
@@ -269,6 +265,10 @@ function setup(loader, resources) {
         }
 
         if (state === play) {
+            if (!pointer_fire_sounds.hasOwnProperty(event.data.pointerId)) {
+                pointer_fire_sounds[event.data.pointerId] = fire_sounds[pointer_fire_sounds.length];
+                pointer_fire_sounds.length += 1
+            }
             try {
                 pointer_fire_sounds[event.data.pointerId].volume = 1;
             } catch (err) {}
