@@ -147,15 +147,17 @@ function loadProgressHandler(loader, resource) {
 }
 
 let state;
-    max_duration = 30;
+    max_duration = 40;
     max_height = 0.008;
     max_brightness = 8/window.devicePixelRatio;
     max_velocity = 5;
     min_velocity = 2;
     decay_rate = 0.2;
 
-let points, last_points, downs, sounds;
+let points, last_points, downs;
+let pointer_flame_sounds = {}, pointer_fire_sounds = {};
 let flame_sound, fire_sound;
+let flame_sounds, fire_sounds;
 let sparkles;
 
 let background;
@@ -200,20 +202,43 @@ function setup(loader, resources) {
     );
 
     fire_sound = resources.fire.sound;
-    fire_sound.volume = 0.1;
+    //fire_sound.volume = 0.1;
+    fire_sound.volume = 0.5;
+    fire_sounds = [];
+    for (let i = 0; i < 11; i++) {
+        //fire_sounds.push(Object.assign(Object.create( Object.getPrototypeOf(fire_sound)), fire_sound));
+        //fire_sounds[i].play({start: Math.random() * (fire_sound.duration - 1), loop: true});
+        fire_sounds.push(fire_sound.play({start: Math.random() * (fire_sound.duration - 1), loop: true}));
+        fire_sounds[i].volume = 0;
+    }
 
     flame_sound = resources.flame.sound;
-    flame_sound.volume = 0.7;
+    //flame_sound.volume = 0.7;
+    flame_sound.volume = 1;
+    flame_sounds = [];
+    for (let i = 0; i < 11; i++) {
+        flame_sounds.push(flame_sound.play({start: Math.random() * (flame_sound.duration - 1), loop: true}));
+        flame_sounds[i].volume = 0;
+    }
 
     resetPoints();
 
     app.renderer.plugins.interaction.on('pointermove', event => {
         if (state === play) {
+            if (!pointer_flame_sounds.hasOwnProperty(event.data.pointerId)) {
+                pointer_flame_sounds[event.data.pointerId] = flame_sounds[pointer_flame_sounds.length];
+                pointer_flame_sounds.length += 1
+            }
+            if (!pointer_fire_sounds.hasOwnProperty(event.data.pointerId)) {
+                pointer_fire_sounds[event.data.pointerId] = fire_sounds[pointer_fire_sounds.length];
+                pointer_fire_sounds.length += 1
+            }
+
             let point = event.data.global;
             point = new PIXI.Point((point.x - app.stage.x) / app.stage.scale.x, (point.y - app.stage.y) / app.stage.scale.y);
             points[event.data.pointerId] = point;
 
-            id = event.data.pointerId;
+            let id = event.data.pointerId;
             if (last_points.hasOwnProperty(id) && last_points[id] !== null) {
                 let last_point = last_points[id];
                 let vx = point.x - last_point.x;
@@ -225,15 +250,10 @@ function setup(loader, resources) {
                 //    let ax = vx - last_velocity.x;
                 //    let ay = vy - last_velocity.y;
                 //    let acceleration = Math.sqrt(ax*ax + ay*ay) * window.devicePixelRatio;
-                    let speed = Math.sqrt(vx*vx + vy*vy) * window.devicePixelRatio;
-
-                    let start_time = Math.random() * (flame_sound.duration - 0.5);
-                    let end_time = start_time + 0.3;
-                    if (!sounds.hasOwnProperty(id)) {
-                        sounds[id] = [];
-                    }
-                    sounds[id].push(flame_sound.play(
-                        {loop: false, start: start_time, end: end_time, volume: Math.min(1, speed/100),}));
+                let speed = Math.sqrt(vx*vx + vy*vy) * window.devicePixelRatio;
+                try {
+                    pointer_flame_sounds[id].volume = pointer_flame_sounds[id].volume * 0.6 + 0.4 * Math.min(1, speed/30);
+                } catch (err) {}
                     //sounds[id].volume = 0.75 * Math.min(1, speed/100) + 0.25 * Math.min(1, acceleration/20);
                 //}
 
@@ -249,6 +269,10 @@ function setup(loader, resources) {
         }
 
         if (state === play) {
+            try {
+                pointer_fire_sounds[event.data.pointerId].volume = 1;
+            } catch (err) {}
+
             let point = event.data.global;
             point = new PIXI.Point((point.x - app.stage.x)/app.stage.scale.x, (point.y - app.stage.y)/app.stage.scale.y);
             points[event.data.pointerId] = point;
@@ -259,6 +283,9 @@ function setup(loader, resources) {
     function pointerUpHandler(event) {
         downs[event.data.pointerId] = false;
         last_points[event.data.pointerId] = null;
+        try {
+            pointer_fire_sounds[event.data.pointerId].volume = 0;
+        } catch (err) {}
         //velocities[event.data.pointerId] = null;
     }
     app.renderer.plugins.interaction.on('pointerup', pointerUpHandler);
@@ -293,7 +320,27 @@ function resetPoints() {
     last_points = {};
     //velocities = {};
     downs = {};
-    sounds = {};
+
+    Object.keys(pointer_flame_sounds).forEach(e => {
+        if (pointer_flame_sounds.hasOwnProperty(e)) {
+            try {
+                pointer_flame_sounds[e].volume = 0;
+            } catch (err) {}
+        }
+    });
+    Object.keys(pointer_fire_sounds).forEach(e => {
+        if (pointer_fire_sounds.hasOwnProperty(e)) {
+            try {
+                pointer_fire_sounds[e].volume = 0;
+            } catch (err) {}
+        }
+    });
+
+
+    pointer_flame_sounds = {};
+    pointer_flame_sounds.length = 0;
+    pointer_fire_sounds = {};
+    pointer_fire_sounds.length = 0;
 }
 function fulllScreenButtonAction(event) {
     requestFullScreen();
@@ -339,14 +386,10 @@ function play(delta) {
             continue;
         }
 
-        if (sounds.hasOwnProperty(id)) {
-            for (let i = sounds[id].length; i > 0; i--) {
-                try {
-                    sounds[id][i].volume *= Math.pow(0.5, delta);
-                } catch (err){
-                    sounds[id].pop(i);
-                }
-            }
+        if (pointer_flame_sounds.hasOwnProperty(id)) {
+            try {
+                pointer_flame_sounds[id].volume *= Math.pow(0.95, delta);
+            } catch (err) {}
         }
 
         let down = downs[id];
@@ -374,8 +417,6 @@ function play(delta) {
             const start_time = 2 + Math.random() * (fire_sound.duration - light.duration/60 - 4);
             const end_time = start_time + light.duration/60 + 1;
 
-            light.sound = fire_sound.play({start: start_time, end: end_time});
-
             //let r = 1;
             //light.falloff = [1, 2/r, 1/r/r];
             sparkles.addChild(light);
@@ -395,10 +436,6 @@ function play(delta) {
 
         e.lightHeight = max_height * Math.pow(e.duration/max_duration, decay_rate);
         e.brightness = max_brightness * Math.pow(e.duration/max_duration, decay_rate);
-        try {
-            e.sound.volume = Math.sqrt(e.duration/max_duration);
-        } catch(err) {
-        }
 
         e.duration -= delta;
         if (e.duration < 0) {
@@ -407,7 +444,6 @@ function play(delta) {
     });
 
     removes.forEach(e => {
-        e.sound.stop();
         sparkles.removeChild(e);
     });
 }
